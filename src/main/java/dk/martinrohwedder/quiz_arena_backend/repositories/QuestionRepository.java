@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface QuestionRepository extends JpaRepository<Question, UUID> {
-    List<Question> findAllByQuizIdOrderByQuestionOrderAsc(UUID quizId);
+    List<Question> findAllByQuiz_IdOrderByQuestionOrderAsc(UUID quizId);
 }
