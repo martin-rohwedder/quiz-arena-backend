@@ -56,7 +56,8 @@ public class Quiz {
     }
 
     public void removeQuestion(Question question) {
-        questions.remove(question);
-        question.setQuiz(null);
+        if (questions.remove(question)) {
+            question.setQuiz(null);
+        }
     }
 }

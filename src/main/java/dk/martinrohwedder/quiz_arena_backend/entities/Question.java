@@ -58,7 +58,8 @@ public class Question {
     }
 
     public void removeAnswerOption(AnswerOption answerOption) {
-        answerOptions.remove(answerOption);
-        answerOption.setQuestion(null);
+        if (answerOptions.remove(answerOption)) {
+            answerOption.setQuestion(null);
+        }
     }
 }
