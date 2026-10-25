@@ -1,0 +1,11 @@
+package dk.martinrohwedder.quiz_arena_backend.repositories;
+
+import dk.martinrohwedder.quiz_arena_backend.entities.Question;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.List;
+import java.util.UUID;
+
+public interface QuestionRepository extends JpaRepository<Question, UUID> {
+    List<Question> findAllByQuizIdOrderByQuestionOrderAsc(UUID quizId);
+}
