@@ -12,7 +12,7 @@ public record CreateAnswerOptionsRequest(
 
         @NotNull
         @Min(1)
-        int optionOrder,
+        Integer optionOrder,
 
         boolean isCorrect
 ) {}
