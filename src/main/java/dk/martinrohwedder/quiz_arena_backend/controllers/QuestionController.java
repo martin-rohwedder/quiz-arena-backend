@@ -1,6 +1,7 @@
 package dk.martinrohwedder.quiz_arena_backend.controllers;
 
 import dk.martinrohwedder.quiz_arena_backend.dtos.requests.CreateQuestionRequest;
+import dk.martinrohwedder.quiz_arena_backend.dtos.requests.UpdateQuestionRequest;
 import dk.martinrohwedder.quiz_arena_backend.dtos.responses.QuestionResponse;
 import dk.martinrohwedder.quiz_arena_backend.services.QuestionService;
 import jakarta.validation.Valid;
@@ -29,5 +30,22 @@ public class QuestionController {
     @GetMapping
     public ResponseEntity<List<QuestionResponse>> getQuestions(@PathVariable UUID quizId) {
         return ResponseEntity.ok(questionService.getQuestions(quizId));
+    }
+
+    @GetMapping("/{questionId}")
+    public ResponseEntity<QuestionResponse> getQuestion(@PathVariable UUID quizId, @PathVariable UUID questionId) {
+        return ResponseEntity.ok(questionService.getQuestionById(quizId, questionId));
+    }
+
+    @PutMapping("/{questionId}")
+    public ResponseEntity<QuestionResponse> updateQuestion(@PathVariable UUID quizId, @PathVariable UUID questionId, @Valid @RequestBody UpdateQuestionRequest request) {
+        return ResponseEntity.ok(questionService.updateQuestion(quizId, questionId, request));
+    }
+
+    @DeleteMapping("/{questionId}")
+    public ResponseEntity<Void>  deleteQuestion(@PathVariable UUID quizId, @PathVariable UUID questionId) {
+        questionService.deleteQuestionById(quizId, questionId);
+
+        return ResponseEntity.noContent().build();
     }
 }

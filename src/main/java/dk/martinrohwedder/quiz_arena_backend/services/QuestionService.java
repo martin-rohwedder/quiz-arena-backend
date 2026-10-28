@@ -1,7 +1,9 @@
 package dk.martinrohwedder.quiz_arena_backend.services;
 
+import dk.martinrohwedder.quiz_arena_backend.dtos.requests.AnswerOptionRequest;
 import dk.martinrohwedder.quiz_arena_backend.dtos.requests.CreateAnswerOptionsRequest;
 import dk.martinrohwedder.quiz_arena_backend.dtos.requests.CreateQuestionRequest;
+import dk.martinrohwedder.quiz_arena_backend.dtos.requests.UpdateQuestionRequest;
 import dk.martinrohwedder.quiz_arena_backend.dtos.responses.QuestionResponse;
 import dk.martinrohwedder.quiz_arena_backend.entities.AnswerOption;
 import dk.martinrohwedder.quiz_arena_backend.entities.Question;
@@ -35,11 +37,7 @@ public class QuestionService {
 
         validateAnswerOptions(request.answerOptions());
 
-        boolean orderAlreadyExists = questionRepository.findAllByQuiz_IdOrderByQuestionOrderAsc(quizId)
-                .stream()
-                .anyMatch(question -> question.getQuestionOrder() == request.questionOrder());
-
-        if (orderAlreadyExists) {
+        if (questionRepository.existsByQuiz_IdAndQuestionOrder(quizId, request.questionOrder())) {
             throw new IllegalStateException("A question with this order already exists in the quiz.");
         }
 
@@ -78,13 +76,74 @@ public class QuestionService {
                 .toList();
     }
 
-    private void validateAnswerOptions(List<CreateAnswerOptionsRequest> answerOptions) {
-        if (answerOptions.size() < 2) {
-            throw new IllegalStateException("A question must have at least two answer options.");
+    @Transactional(readOnly = true)
+    public QuestionResponse getQuestionById(UUID quizId, UUID questionId) {
+        if (!quizRepository.existsById(quizId)) {
+            throw new EntityNotFoundException("Quiz not found: " + quizId);
+        }
+
+        return questionRepository.findByIdAndQuiz_Id(questionId, quizId)
+                .map(questionMapper::toDto)
+                .orElseThrow(() ->  new EntityNotFoundException("Question not found: " + questionId));
+    }
+
+    public QuestionResponse updateQuestion(UUID quizId, UUID questionId, UpdateQuestionRequest request) {
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new EntityNotFoundException("Quiz not found: " + quizId));
+
+        if (quiz.getStatus() != QuizStatus.DRAFT) {
+            throw new IllegalStateException("Questions can only be updated in draft quizzes.");
+        }
+
+        Question question = questionRepository.findByIdAndQuiz_Id(questionId, quizId).orElseThrow(() -> new EntityNotFoundException("Question not found: " + questionId));
+
+        validateAnswerOptions(request.answerOptions());
+
+        if (question.getQuestionOrder() != request.questionOrder() && questionRepository.existsByQuiz_IdAndQuestionOrder(quizId, request.questionOrder())) {
+            throw new IllegalStateException("A question with this order already exists in the quiz.");
+        }
+
+        question.setQuestionText(request.questionText());
+        question.setQuestionOrder(request.questionOrder());
+        question.setTimeLimitSeconds(request.timeLimitSeconds());
+
+        for (AnswerOption option : List.copyOf(question.getAnswerOptions())) {
+            question.removeAnswerOption(option);
+        }
+
+        for (var optionRequest : request.answerOptions()) {
+            AnswerOption option = AnswerOption.builder()
+                    .answerText(optionRequest.answerText())
+                    .optionOrder(optionRequest.optionOrder())
+                    .isCorrect(optionRequest.isCorrect())
+                    .build();
+
+            question.addAnswerOption(option);
+        }
+
+        Question updatedQuestion = questionRepository.save(question);
+
+        return questionMapper.toDto(updatedQuestion);
+    }
+
+    public void deleteQuestionById(UUID quizId, UUID questionId) {
+        Quiz quiz = quizRepository.findById(quizId).orElseThrow(() -> new EntityNotFoundException("Quiz not found: " + quizId));
+
+        if (quiz.getStatus() != QuizStatus.DRAFT) {
+            throw new IllegalStateException("Questions can only be deleted in draft quizzes.");
+        }
+
+        Question question = questionRepository.findByIdAndQuiz_Id(questionId, quizId).orElseThrow(() -> new EntityNotFoundException("Question not found: " + questionId));
+        questionRepository.delete(question);
+    }
+
+
+    private void validateAnswerOptions(List<? extends AnswerOptionRequest> answerOptions) {
+        if (answerOptions.size() < 2 || answerOptions.size() > 4) {
+            throw new IllegalStateException("A question must have between 2 and 4 answer options.");
         }
 
         long correctAnswers = answerOptions.stream()
-                .filter(CreateAnswerOptionsRequest::isCorrect)
+                .filter(AnswerOptionRequest::isCorrect)
                 .count();
 
         if (correctAnswers != 1) {
@@ -92,7 +151,7 @@ public class QuestionService {
         }
 
         long distinctOrders = answerOptions.stream()
-                .map(CreateAnswerOptionsRequest::optionOrder)
+                .map(AnswerOptionRequest::optionOrder)
                 .distinct()
                 .count();
 

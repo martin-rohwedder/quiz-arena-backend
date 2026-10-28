@@ -1,10 +1,7 @@
 package dk.martinrohwedder.quiz_arena_backend.dtos.requests;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 import java.util.List;
 
@@ -17,6 +14,7 @@ public record CreateQuestionRequest(
         int questionOrder,
 
         @Min(1)
+        @Max(60)
         int timeLimitSeconds,
 
         @NotEmpty

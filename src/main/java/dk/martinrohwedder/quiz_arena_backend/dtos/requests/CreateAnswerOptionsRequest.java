@@ -1,9 +1,6 @@
 package dk.martinrohwedder.quiz_arena_backend.dtos.requests;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 
 public record CreateAnswerOptionsRequest(
         @NotBlank
@@ -12,7 +9,8 @@ public record CreateAnswerOptionsRequest(
 
         @NotNull
         @Min(1)
+        @Max(4)
         Integer optionOrder,
 
         boolean isCorrect
-) {}
+) implements AnswerOptionRequest {}
