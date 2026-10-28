@@ -21,9 +21,9 @@ public class QuizController {
     private final QuizService quizService;
 
     @PostMapping
-    public ResponseEntity<QuizResponse> createQuiz(@Valid @RequestBody CreateQuizRequest request) {
+    public ResponseEntity<QuizResponse> createQuiz(@Valid @RequestBody CreateQuizRequest request, UriComponentsBuilder uriBuilder) {
         QuizResponse response = quizService.createQuiz(request);
-        var uriLocation = UriComponentsBuilder.fromPath("/api/quizzes/{id}").buildAndExpand(response.id()).toUri();
+        var uriLocation = uriBuilder.path("/api/quizzes/{id}").buildAndExpand(response.id()).toUri();
 
         return ResponseEntity.created(uriLocation).body(response);
     }

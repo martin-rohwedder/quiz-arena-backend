@@ -16,9 +16,9 @@ public class GameRoomController {
     private final GameRoomService gameRoomService;
 
     @PostMapping
-    public ResponseEntity<GameRoomResponse> createGameRoom(@Valid @RequestBody CreateGameRoomRequest request) {
+    public ResponseEntity<GameRoomResponse> createGameRoom(@Valid @RequestBody CreateGameRoomRequest request, UriComponentsBuilder uriBuilder) {
         GameRoomResponse response = gameRoomService.createGameRoom(request);
-        var uriLocation = UriComponentsBuilder.fromPath("/api/game-rooms/code/{roomCode}").buildAndExpand(response.roomCode()).toUri();
+        var uriLocation = uriBuilder.path("/api/game-rooms/code/{roomCode}").buildAndExpand(response.roomCode()).toUri();
 
         return ResponseEntity.created(uriLocation).body(response);
     }
